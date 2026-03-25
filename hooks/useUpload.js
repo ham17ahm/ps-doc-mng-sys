@@ -61,7 +61,7 @@ export function useUpload() {
           documentId:      doc.id,
         });
         // Start SSE listener for this document
-        listenForStatus(doc.id, localId, updateFile);
+        listenForStatus(doc.id, localId, updateFile, setFiles);
       });
 
     } catch (err) {
@@ -111,7 +111,7 @@ export function useUpload() {
 }
 
 // ── SSE listener ────────────────────────────────────────────────────────────
-function listenForStatus(documentId, localId, updateFile) {
+function listenForStatus(documentId, localId, updateFile, setFiles) {
   const es = new EventSource(`/api/documents/${documentId}/status`);
 
   es.addEventListener('status', (e) => {
@@ -123,12 +123,34 @@ function listenForStatus(documentId, localId, updateFile) {
         break;
 
       case 'extracted':
-        // Extraction done — store the data so the review form can use it
+        // Single result — store the data so the review form can use it
         updateFile(localId, {
           status:   'extracted',
           step:     '',
           progress: 100,
           formData: data.extractedData || {},
+        });
+        es.close();
+        break;
+
+      case 'multi_extracted':
+        // Gemini detected multiple documents in one file.
+        // Replace the single file item with one item per result.
+        setFiles((prev) => {
+          const idx = prev.findIndex((f) => f.id === localId);
+          if (idx === -1) return prev;
+          const original = prev[idx];
+          const expanded = data.results.map((result, i) => ({
+            ...original,
+            id:              i === 0 ? localId : Math.random().toString(36).slice(2),
+            status:          'extracted',
+            step:            '',
+            progress:        100,
+            documentId:      result.id,
+            referenceNumber: result.referenceNumber,
+            formData:        result.extractedData || {},
+          }));
+          return [...prev.slice(0, idx), ...expanded, ...prev.slice(idx + 1)];
         });
         es.close();
         break;
