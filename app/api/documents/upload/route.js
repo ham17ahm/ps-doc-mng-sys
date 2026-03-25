@@ -13,6 +13,7 @@ export async function POST(request) {
 
     const formData = await request.formData();
     const files = formData.getAll('files');
+    const promptName = formData.get('promptName') || 'extraction';
 
     validateFileBatch(files);
 
@@ -25,6 +26,7 @@ export async function POST(request) {
 
       const doc = await createDocument({
         referenceNumber,
+        promptName,
         file: {
           originalName: storedFile.originalName,
           storedPath:   storedFile.storedPath,
@@ -39,6 +41,7 @@ export async function POST(request) {
         documentId: doc._id.toString(),
         storedPath: storedFile.storedPath,
         mimeType:   storedFile.mimeType,
+        promptName,
       });
 
       results.push({

@@ -1,4 +1,5 @@
 'use client';
+import { useEffect, useState } from 'react';
 import { useUpload } from '@/hooks/useUpload';
 import FileDropzone from '@/components/upload/FileDropzone';
 import UploadQueue from '@/components/upload/UploadQueue';
@@ -8,12 +9,26 @@ export default function UploadPage() {
   const {
     files,
     isUploading,
+    promptName,
+    setPromptName,
     addFiles,
     removeFile,
     clearAll,
     uploadAll,
     saveDocument,
   } = useUpload();
+
+  // Fetch available prompts for the dropdown
+  const [prompts, setPrompts] = useState([]);
+
+  useEffect(() => {
+    fetch('/api/prompts')
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success) setPrompts(data.prompts);
+      })
+      .catch(() => {});
+  }, []);
 
   // Files that need user review (extracted but not yet saved)
   const forReview = files.filter((f) => f.status === 'extracted' || f.status === 'saving');
@@ -32,6 +47,27 @@ export default function UploadPage() {
           Upload a PDF or image. Gemini will extract the key information for you to review before saving.
         </p>
       </div>
+
+      {/* Prompt selector */}
+      {prompts.length > 1 && (
+        <div className="mb-4">
+          <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1.5">
+            Extraction Prompt
+          </label>
+          <select
+            value={promptName}
+            onChange={(e) => setPromptName(e.target.value)}
+            disabled={isUploading}
+            className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+          >
+            {prompts.map((p) => (
+              <option key={p.name} value={p.name}>
+                {p.name} — {p.description}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {/* Drop zone */}
       <FileDropzone onFiles={addFiles} disabled={isUploading} />
@@ -67,7 +103,7 @@ export default function UploadPage() {
             Ultimate PS DMS System
           </h2>
           <p className="mt-2 text-sm text-gray-500 font-medium">
-            With capabilities beyond your limit! 😄
+            With capabilities beyond your limit!
           </p>
         </div>
       )}

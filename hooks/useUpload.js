@@ -16,6 +16,7 @@ const initialFileState = (file) => ({
 export function useUpload() {
   const [files, setFiles] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [promptName, setPromptName] = useState('extraction');
 
   const addFiles = useCallback((newFiles) => {
     setFiles((prev) => [...prev, ...Array.from(newFiles).map(initialFileState)]);
@@ -43,6 +44,7 @@ export function useUpload() {
 
     const formData = new FormData();
     pending.forEach((f) => formData.append('files', f.file));
+    formData.append('promptName', promptName);
 
     try {
       const res  = await fetch('/api/documents/upload', { method: 'POST', body: formData });
@@ -67,7 +69,7 @@ export function useUpload() {
     } finally {
       setIsUploading(false);
     }
-  }, [files, updateFile]);
+  }, [files, updateFile, promptName]);
 
   /**
    * Called when the user clicks Save on the review form.
@@ -98,6 +100,8 @@ export function useUpload() {
   return {
     files,
     isUploading,
+    promptName,
+    setPromptName,
     addFiles,
     removeFile,
     clearAll,

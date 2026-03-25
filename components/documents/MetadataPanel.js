@@ -2,13 +2,14 @@ import Badge from '@/components/ui/Badge';
 import { formatFileSize, formatDisplayDate } from '@/lib/utils/formatters';
 
 export default function MetadataPanel({ doc }) {
-  const { file, createdAt, updatedAt, status } = doc;
+  const { file, createdAt, updatedAt, status, promptName } = doc;
 
   return (
     <div className="rounded-xl border border-gray-200 bg-gray-50 p-5 space-y-4 text-sm">
       <h3 className="font-semibold text-gray-700 text-xs uppercase tracking-wide">Metadata</h3>
 
       <Row label="Status"><Badge variant={status}>{status}</Badge></Row>
+      {promptName && <Row label="Prompt">{promptName}</Row>}
 
       {file && (
         <>

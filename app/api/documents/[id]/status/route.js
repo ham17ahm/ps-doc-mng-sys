@@ -30,8 +30,7 @@ export async function GET(request, { params }) {
           // For 'extracted', include the reviewable fields so the client
           // can still populate the edit form after a reconnect.
           if (current.status === 'extracted' && current.extractedData) {
-            const { rawText, ...reviewable } = current.extractedData;
-            payload.extractedData = reviewable;
+            payload.extractedData = current.extractedData;
           }
 
           send(payload);
